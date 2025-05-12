@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerta Dólar - Notificador de precio</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #0066cc;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+            margin-bottom: 20px;
+        }
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            margin: 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0055a5;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .current-price {
+            font-size: 24px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .price {
+            font-weight: bold;
+            font-size: 28px;
+            color: #0066cc;
+        }
+        .notification-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .notification-option {
+            flex: 1;
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .checkbox-container input {
+            width: auto;
+            margin-right: 10px;
+        }
+        .hidden {
+            display: none;
+        }
+        @media (max-width: 600px) {
+            .notification-options {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Alerta Dólar</h1>
+            <p>Recibe notificaciones cuando el dólar alcance el precio deseado</p>
+        </div>
+        
+        <div class="card">
+            <div class="current-price">
+                Precio actual del dólar oficial: <span class="price" id="currentPrice">$1,150.00</span> ARS
+                <div style="font-size: 14px; color: #666; margin-top: 5px;">Última actualización: <span id="lastUpdate">12 de Mayo, 2025 12:30</span></div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Configura tu alerta</h2>
+            <form id="alertForm">
+                <div class="form-group">
+                    <label for="targetPrice">Precio objetivo (en pesos argentinos)</label>
+                    <input type="number" id="targetPrice" value="1120" step="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Tipo de alerta</label>
+                    <div class="checkbox-container">
+                        <input type="checkbox" id="alertLower" checked>
+                        <label for="alertLower">Notificarme cuando el precio baje del objetivo</label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Método de notificación</label>
+                    <div class="notification-options">
+                        <div class="notification-option">
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="emailNotification" checked>
+                                <label for="emailNotification">Email</label>
+                            </div>
+                        </div>
+                        <div class="notification-option">
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="smsNotification">
+                                <label for="smsNotification">SMS / WhatsApp</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="emailField" class="form-group">
+                        <label for="email">Tu dirección de email</label>
+                        <input type="email" id="email" placeholder="ejemplo@correo.com" required>
+                    </div>
+                    
+                    <div id="phoneField" class="form-group hidden">
+                        <label for="phone">Tu número de celular</label>
+                        <input type="tel" id="phone" placeholder="+54 9 11 1234-5678">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="frequency">Frecuencia de verificación</label>
+                    <select id="frequency">
+                        <option value="5">Cada 5 minutos</option>
+                        <option value="15">Cada 15 minutos</option>
+                        <option value="30" selected>Cada 30 minutos</option>
+                        <option value="60">Cada hora</option>
+                        <option value="360">Cada 6 horas</option>
+                        <option value="720">Cada 12 horas</option>
+                        <option value="1440">Una vez al día</option>
+                    </select>
+                </div>
+                
+                <button type="submit" id="submitBtn">Activar Alerta</button>
+            </form>
+            
+            <div id="statusMessage" class="status hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        // Simulación de datos y funcionalidad
+        document.addEventListener('DOMContentLoaded', function() {
+            const alertForm = document.getElementById('alertForm');
+            const statusMessage = document.getElementById('statusMessage');
+            const emailNotification = document.getElementById('emailNotification');
+            const smsNotification = document.getElementById('smsNotification');
+            const emailField = document.getElementById('emailField');
+            const phoneField = document.getElementById('phoneField');
+            const currentPrice = document.getElementById('currentPrice');
+            const lastUpdate = document.getElementById('lastUpdate');
+            
+            // Simular precio actual actualizado
+            function updateCurrentPrice() {
+                // Simulación de precio entre 1140 y 1160
+                const randomPrice = (Math.random() * 20 + 1140).toFixed(2);
+                currentPrice.textContent = '$' + randomPrice.replace('.', ',');
+                
+                // Actualizar fecha y hora
+                const now = new Date();
+                const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+                lastUpdate.textContent = now.toLocaleDateString('es-AR', options);
+                
+                // Programar próxima actualización (cada 30 segundos para esta demo)
+                setTimeout(updateCurrentPrice, 30000);
+            }
+            
+            // Iniciar simulación
+            updateCurrentPrice();
+            
+            // Mostrar/ocultar campos según las opciones seleccionadas
+            emailNotification.addEventListener('change', function() {
+                emailField.classList.toggle('hidden', !this.checked);
+            });
+            
+            smsNotification.addEventListener('change', function() {
+                phoneField.classList.toggle('hidden', !this.checked);
+                if (this.checked && !emailNotification.checked) {
+                    emailField.classList.add('hidden');
+                }
+            });
+            
+            // Manejar el envío del formulario
+            alertForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const targetPrice = document.getElementById('targetPrice').value;
+                const email = document.getElementById('email').value;
+                const phone = document.getElementById('phone').value;
+                const frequency = document.getElementById('frequency').value;
+                
+                // Validar formulario
+                if (emailNotification.checked && !email) {
+                    showStatus('Por favor ingresa tu dirección de email para recibir notificaciones.', 'error');
+                    return;
+                }
+                
+                if (smsNotification.checked && !phone) {
+                    showStatus('Por favor ingresa tu número de celular para recibir notificaciones SMS/WhatsApp.', 'error');
+                    return;
+                }
+                
+                // En un entorno real, aquí se enviaría la información al servidor
+                // Simulamos éxito para esta demo
+                showStatus('¡Alerta configurada con éxito! Te notificaremos cuando el dólar oficial baje de $' + targetPrice + ' pesos argentinos.', 'success');
+                
+                // Desactivar botón temporalmente para evitar múltiples envíos
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Alerta Activada';
+                setTimeout(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Activar Alerta';
+                }, 5000);
+            });
+            
+            // Función para mostrar mensajes de estado
+            function showStatus(message, type) {
+                statusMessage.textContent = message;
+                statusMessage.className = 'status ' + type;
+                statusMessage.classList.remove('hidden');
+                
+                // Desplazarse al mensaje
+                statusMessage.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    </script>
+</body>
+</html>
